@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chat group</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.js"></script>
+</head>
+	
+<body>
+	<script>
+		var socket = io();
+		function setUserName() {
+			socket.emit('setUserName', document.getElementById('name').value);
+		}
+
+		function isUserConnected() {
+
+		}
+		var user;
+		var iMessage = 0;
+
+
+		socket.on('userExists', function (data) {
+			document.getElementById('error').innerHTML = data;
+		});
+
+		socket.on('userSet', function (data) {
+			user = data.username;
+			document.body.innerHTML = '\
+				<div class="container"> \
+					<div class="row"> \
+						<div class="col-md-10"> \
+							<div class="form-group"> \
+								<input type="text" class="form-control" id="message" placeholder="Пиши здесь"> \
+								<button type="button" class="btn btn-primary" name="button" onclick="sendMessage()">Отправить</button>\
+								<p>' + user + ' connected to chat' + '</p>\
+								<div id="message-container"></div> \
+							</div> \
+						</div> \
+					</div> \
+				</div>'
+			});
+
+		function sendMessage() {
+			var messageData = document.getElementById('message').value;
+			if (messageData) {
+				socket.emit('message', {user: user, message: messageData});
+			}
+			document.getElementById('message').value = '';
+		}
+
+		socket.on('newMessage', function (data) {
+
+			if (user) {
+				document.getElementById('message-container').innerHTML += '<div>\
+					<div class="user-message-' + iMessage +'"><b>' + data.user + '</b>: ' + data.message + '<span style="padding-left: 200px">' + moment().calendar() + '</span>' +'</div>' + '\
+					<div class="btn-group" role="group" aria-label="Basic example">\
+					  <button type="button" class="btn btn-secondary editMessage-' + iMessage +'">Edit</button>\
+					  <button type="button" class="btn btn-secondary deleteMessage-' + iMessage +'">Delete</button>\
+					</div>\
+				</div>';
+				iMessage++;
+			}
+		})
+
+
+
+		function editMessage() {
+
+		}
+
+		function deleteMessage() {
+
+		}
+	</script>
+<div class="container">
+	<div class="row">
+		<div class="col-md-10">
+			<div id="error"></div>
+			<div class="form-group">
+				<label for="name"> Давай общаться</label>
+				<input type="text" class="form-control" id="name" placeholder="Введите свое имя">
+				<button type="submit" class="btn btn-primary" name="button" onclick="setUserName()">Вперёд</button>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>
